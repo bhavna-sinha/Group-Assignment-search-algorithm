@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import matplotlib.ticker as ticker
 import heapq
+from math import sin, cos, sqrt, atan2
 
 # setrecursionlimit(5000)
 
@@ -107,6 +108,7 @@ def draw_plot(path, closed, city_pos_map, routing_algorithm, cost_function, best
     plt.savefig("path_from_%s_to_%s_%s_%s" % (path[0], path[-1], routing_algorithm, cost_function))#, bbox_inches='tight')
     plt.show()
     return best_path
+
 def cal_depth(closed, city):
     d = 0
     while city != "-1":
@@ -116,13 +118,24 @@ def cal_depth(closed, city):
 
 def cal_cost(co, a, b, dist_map):
     if co == "segments": return 1
-    if a+b in dist_map: return dist_map[a+b][0] / 10 if co == "distance" else 5 * dist_map[a+b][0] / (dist_map[a+b][1] if dist_map[a+b][1] > 0 else 25)
-    elif b+a in dist_map: return dist_map[b+a][0] / 10 if co == "distance" else 5 * dist_map[b+a][0] / (dist_map[b+a][1] if dist_map[b+a][1] > 0 else 25)
+    if a+b in dist_map: return dist_map[a+b][0] / 10 if co == "distance" else 5 * dist_map[a+b][0] / (dist_map[a+b][1])# if dist_map[a+b][1] > 0 else 25)
+    elif b+a in dist_map: return dist_map[b+a][0] / 10 if co == "distance" else 5 * dist_map[b+a][0] / (dist_map[b+a][1])# if dist_map[b+a][1] > 0 else 25)
     print("WRONG COST CAL!!!")
     return 1000
+def cal_dist(lat1, lon1, lat2, lon2):
+    R = 6373.0
 
-def print_results(path, closed, routing_algorithm, co, dist_map):
-    output = "no" if routing_algorithm == "dfs" else "yes"
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = (sin(dlat/2))**2 + cos(lat1) * cos(lat2) * (sin(dlon/2))**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    return R * c
+
+
+def print_results(path, closed, routing, co, dist_map):
+    output = "no" if routing == "dfs" or (routing in ["bfs", "ids"] and co != "segments") \
+                     or (routing == "astar" and co != "distance") \
+        else "yes"
     distance, time = 0, 0
     b = path[-1]
     a = closed[b][0]
@@ -160,16 +173,15 @@ def blind_search(start_city, end_city, road_hash_Map, routing_algorithm, cost_fu
         city_d = closed[city][1]
         if(d == None or city_d <= d): # To make sure ids will not pass depth d
             for ind, succ_city in enumerate(road_hash_Map[city]):
-                if (succ_city in closed and d == None) or (succ_city in closed and closed[succ_city][1] <= city_d + cal_cost(cost_function, city, succ_city, highway_dist_map)):
+                if (succ_city in closed and d == None) or (succ_city in closed and closed[succ_city][1] <= city_d + 1):
                     continue
-                c = cal_cost(cost_function, city, succ_city, highway_dist_map)
-                closed[succ_city] = [city, city_d + c] # Marking visited cities to avoid infinite-loops
+                closed[succ_city] = [city, city_d + 1] # Marking visited cities to avoid infinite-loops
 
                 fringe.append(succ_city)
 
     return [], {}
 
-def astar_search(start_city, end_city, road_hash_Map, cost_function, city_pos_map, highway_dist_map):
+def astar_search(start_city, end_city, road_hash_Map, cost_function, city_pos_map, highway_dist_map, use_heurisitc):
     closed = {}
     path = []
     hs = abs(city_pos_map[start_city][0] - city_pos_map[end_city][0]) +\
@@ -190,9 +202,13 @@ def astar_search(start_city, end_city, road_hash_Map, cost_function, city_pos_ma
             closed[succ_city] = [city, city_d + cal_cost(cost_function, city, succ_city, highway_dist_map)] # Marking visited cities to avoid infinite-loops
 
             hs = 0
-            if succ_city in city_pos_map: # defining h(s): heuristic function
-                hs = abs(city_pos_map[succ_city][0] - city_pos_map[end_city][0]) +\
-                     abs(city_pos_map[succ_city][1] - city_pos_map[end_city][1])
+            if use_heurisitc and (succ_city in city_pos_map): # defining h(s): heuristic function
+                # heuristic 1
+                hs = cal_dist(city_pos_map[succ_city][0], city_pos_map[succ_city][1], city_pos_map[end_city][0], city_pos_map[end_city][1]) / 880
+                # heuristic 2
+                # hs = abs(city_pos_map[succ_city][0] - city_pos_map[end_city][0]) + abs(city_pos_map[succ_city][1] - city_pos_map[end_city][1])
+                # heuristic 3
+                # hs = sqrt(pow(abs(city_pos_map[succ_city][0] - city_pos_map[end_city][0]), 2) + pow(abs(city_pos_map[succ_city][1] - city_pos_map[end_city][1]), 2))
             heapq.heappush(fringe, (city_d + cal_cost(cost_function, city, succ_city, highway_dist_map) + hs * 2, succ_city))
 
     return [], {}
@@ -201,12 +217,15 @@ def main_search(start_city, end_city, road_hash_Map, routing_algorithm, cost_fun
     if routing_algorithm in ["dfs", "bfs"]: return blind_search(start_city, end_city, road_hash_Map, routing_algorithm, cost_function, highway_dist_map)
     elif routing_algorithm == "ids":
         path = []
+        closed = {}
         d = 0
-        while path == []:
+        while path == [] and d < 1000:
             path, closed = blind_search(start_city, end_city, road_hash_Map, "dfs", cost_function, highway_dist_map, d)
             d += 1
         return path, closed
-    elif routing_algorithm == "astar": return astar_search(start_city, end_city, road_hash_Map, cost_function, city_pos_map, highway_dist_map)
+    elif routing_algorithm in ["uniform", "astar"]:
+        use_heuristic = True if routing_algorithm == "astar" else False
+        return astar_search(start_city, end_city, road_hash_Map, cost_function, city_pos_map, highway_dist_map, use_heuristic)
     return [], {}
 if __name__ == "__main__":
     start_city, end_city, routing_algorithm, cost_function = "", "", "", ""
@@ -238,6 +257,8 @@ if __name__ == "__main__":
     road_hash_Map = {}
     highway_dist_map = {}
     for highway in road_segments:
+        if len(highway) < 4 or highway[3] == 0: # Skipping highways with 0 speed limit as was suggested in piazza
+            continue
         key = highway[0]#.split(',')[0]
         value = highway[1]#.split(',')[0]
         highway_dist_map[key+value] = highway[2:4]
@@ -246,6 +267,9 @@ if __name__ == "__main__":
         if value not in road_hash_Map: road_hash_Map[value] = [key]
         else: road_hash_Map[value].append(key)
     path, closed = main_search(start_city, end_city, road_hash_Map, routing_algorithm, cost_function, city_pos_map, highway_dist_map)
+    if path == []:
+        print("No Path has found!!!")
+        exit()
     best_path = print_results(path, closed, routing_algorithm, cost_function, highway_dist_map)
     if show_plot:
         draw_plot(path, closed, city_pos_map, routing_algorithm, cost_function, best_path)
