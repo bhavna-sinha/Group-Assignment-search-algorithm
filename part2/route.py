@@ -25,7 +25,7 @@ Heuristic function: This function is just get calculated for astar routing algor
  the process of finding the best path. In other words, as our best path may go through one of these cities without
  gps values, we always considered them and remove them first from the fringe to make sure we are not missing any possible
  candidate for the best route.
-We tested three different heuristic functions and we used the first one which is admissible for distance:
+We tested three different heuristic functions and we used the second one which is admissible for distance:
 
 1. Real distance in miles: By using Haversine formula we can calculate the distance of two cities in miles. This function
 is admissible if the cost function is distance, because the closest distance between two cities is the distance that
@@ -57,7 +57,7 @@ priority queue to simulate best first search and pop a city with the lowest eval
 Value of g(s)(which is the first part of f(s)) depends on the type of cost function. It will be the cost of reaching to
 the current point by considering all costs(edge weights) along the path.
 However, the second term of f(s) (which is h(s)) would depend of the type of routing algorithm. For uniform search
-the function assume a zero value for heuristic function and for astar search it will use the first heuristic which was
+the function assume a zero value for heuristic function and for astar search it will use the second heuristic which was
 described before.
 
 Problems we faced, any assumptions, simplifications, and/or design decisions:
@@ -82,6 +82,7 @@ of any given cost. This would make debugging and reading easier.
 calling the rout.py file. This helps to find any possible pitfalls or bugs and understand the way that
 algorithm works.
 
+ NOTE: YOU CAN VISUALIZE THE ROUTE BY TYPING "yes" AFTER THE LAST ARGUMENT
 """
 
 
@@ -290,9 +291,9 @@ def astar_search(start_city, end_city, road_hash_Map, cost_function, city_pos_ma
             hs = 0
             if use_heurisitc and (succ_city in city_pos_map): # defining h(s): heuristic function
                 # heuristic 1
-                hs = cal_dist(city_pos_map[succ_city][0], city_pos_map[succ_city][1], city_pos_map[end_city][0], city_pos_map[end_city][1]) / 880
+                # hs = cal_dist(city_pos_map[succ_city][0], city_pos_map[succ_city][1], city_pos_map[end_city][0], city_pos_map[end_city][1]) / 880
                 # heuristic 2
-                # hs = abs(city_pos_map[succ_city][0] - city_pos_map[end_city][0]) + abs(city_pos_map[succ_city][1] - city_pos_map[end_city][1])
+                hs = abs(city_pos_map[succ_city][0] - city_pos_map[end_city][0]) + abs(city_pos_map[succ_city][1] - city_pos_map[end_city][1])
                 # heuristic 3
                 # hs = sqrt(pow(abs(city_pos_map[succ_city][0] - city_pos_map[end_city][0]), 2) + pow(abs(city_pos_map[succ_city][1] - city_pos_map[end_city][1]), 2))
             heapq.heappush(fringe, (city_d + cal_cost(cost_function, city, succ_city, highway_dist_map) + hs * 2, succ_city))
