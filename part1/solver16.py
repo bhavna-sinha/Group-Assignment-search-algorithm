@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 # solver16.py : Circular 16 Puzzle solver
 # Based on skeleton code by D. Crandall, September 2018
 #
