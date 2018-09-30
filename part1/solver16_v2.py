@@ -165,25 +165,16 @@ def heuristic2(state):
 
     return (result_row+result_col)/2
 
+def my_heuristic(state):
+    # row_changes, col_changes = rows_column_generator(state)
 
-
-
-
-
-
-
-################################## Extra Functions for Heuristic - Start #################################
-
-#Defining the function which will return the moves and directions for each tile in the puzzle to reach goal state
-
-def rows_column_generator(state):
     desired_state = sorted(state)
     cordinates = []
     col_changes = []
     row_changes = []
     for i in range(4):
         for j in range(4):
-            cordinates.append((i,j))
+            cordinates.append((i, j))
     for i in range(len(state)):
         ind = desired_state.index(state[i])
         cordinates_state = cordinates[i]
@@ -210,227 +201,59 @@ def rows_column_generator(state):
         else:
             row_changes.append(row)
 
+    # print(row_changes)
 
-    return row_changes, col_changes
-
-
-# Generating various features for the dataset
-
-def count_positives(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    row_positives = sum([1 for element in row_changes if element > 0])
-    col_positives = sum([1 for element in col_changes if element > 0])
-
-    return row_positives, col_positives
-
-
-def count_negatives(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    row_negatives = sum([1 for element in row_changes if element < 0])
-    col_negatives = sum([1 for element in col_changes if element < 0])
-
-    return row_negatives, col_negatives
-
-
-def rowwise_range(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    row_range = 0
-    col_range = 0
-    for j in range(0, 16, 4):
-        row_range += max(row_changes[j:(j + 4)]) - min(row_changes[j:(j + 4)])
-        col_range += max(col_changes[j:(j + 4)]) - min(col_changes[j:(j + 4)])
-
-    return row_range, col_range
-
-
-def colwise_range(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    row_range = 0
-    col_range = 0
-
-    for k in range(0, 4):
-        row_range += max(row_changes[k::4]) - min(row_changes[k::4])
-        col_range += max(col_changes[k::4]) - min(col_changes[k::4])
-
-    return row_range, col_range
-
-
-def row_col_range(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    return max(row_changes) - min(row_changes), max(col_changes) - min(col_changes)
-
-
-def rowwise_max(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    row_max = 0
-    col_max = 0
-    for j in range(0, 16, 4):
-        row_max += max(row_changes[j:(j + 4)])
-        col_max += max(col_changes[j:(j + 4)])
-
-    return row_max, col_max
-
-
-def colwise_max(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    row_max = 0
-    col_max = 0
-    for k in range(0, 4):
-        row_max += max(row_changes[k::4])
-        col_max += max(col_changes[k::4])
-
-    return row_max, col_max
-
-
-def min_row_col(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    return min(row_changes), min(col_changes)
-
-
-def max_row_col(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    return max(row_changes), max(col_changes)
-
-
-def rowwise_unique(state):
-    row_changes, col_changes = rows_column_generator(state)
+    # row_changes_array = np.array(row_changes).reshape(4, -1)
+    # print(row_changes_array)
+    # col_changes_array = np.array(col_changes).reshape(4, -1)
+    # print(col_changes_array)
+        # row_changes = np.reshape(row_changes,(-1,4))
+        # col_changes = np.array(col_changes)
+        # col_changes = np.reshape(col_changes,(-1,4))
 
     row_unique = 0
     col_unique = 0
 
     for j in range(0, 16, 4):
-        row_unique += len(set(row_changes[j:(j + 4)]))
-        col_unique += len(set(col_changes[j:(j + 4)]))
+        row_unique_set = set(row_changes[j:(j + 4)]) - set([0])
+        row_unique += len(row_unique_set)
+        # print(row_unique)
 
-    return row_unique, col_unique
-
-
-def colwise_unique(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    row_unique = 0
-    col_unique = 0
-
+        # col_unique_set = set(col_changes[j:(j + 4)]) - set([0])
+        # col_unique += len(col_unique_set)
     for k in range(0, 4):
-        row_unique += len(set(row_changes[k::4]))
-        col_unique += len(set(col_changes[k::4]))
+        # row_unique_set = set(col_changes[k::4]) - set([0])
+        col_unique_set = set(col_changes[k::4]) - set([0])
 
-    return row_unique, col_unique
-
-
-def row_col_unique(state):
-    row_changes, col_changes = rows_column_generator(state)
-
-    return len(set(row_changes)), len(set(col_changes))
+        # row_unique += len(row_unique_set)
+        col_unique += len(col_unique_set)
 
 
-def summation(state):
-    row_changes, col_changes = rows_column_generator(state)
 
-    return sum(row_changes), sum(col_changes)
+    # row_changes, col_changes = X_Y_cal(state)
+    # print_tables(state)
+    # s = 0
+    # for ind, row in enumerate(row_changes):
+    #     set_m = set(row) - set([0])
+    #     s += pow(len(set_m), 1)
+    #
+    # for ind, row in enumerate(np.transpose(col_changes)):
+    #     set_m = set(row) - set([0])
+    #     s += pow(len(set_m), 1)
 
+        #   my tries for finding the heuritic
+        # binar = [1 if x != 0 else 0 for x in row]
+        # # s += sum(binar)
+        # m = np.max(row)
+        # n = np.min(row)
+        # set_m = [m - x for x in set_m]
+        # # s += m
+        # # s -= n
+        # # s += sum(set_m)
+        # # s += sum(row)
 
-def abs_summation(state):
-    row_changes, col_changes = rows_column_generator(state)
+    return (((row_unique+col_unique)**1.1)*0.85)/2
 
-    row_abs_sum = sum([abs(element) for element in row_changes])
-    col_abs_sum = sum([abs(element) for element in col_changes])
-
-    return row_abs_sum, col_abs_sum
-
-
-def dot_row_col(state):
-    import numpy as np
-    row_changes, col_changes = rows_column_generator(state)
-
-    return np.dot(row_changes, col_changes)
-
-
-import pickle
-
-
-def distance_calculator(state):
-    #states1234_lookup = pickle.load(
-        #open('C:\\Users\\thakk\\Documents\\GitHub\\rajthakk-nabiyuni-bhsinha-a1\\part1\\successors1234.p', "rb"))
-    #states5678_lookup = pickle.load(
-        #open('C:\\Users\\thakk\\Documents\\GitHub\\rajthakk-nabiyuni-bhsinha-a1\\part1\\successors5678.p', "rb"))
-    #states9101112_lookup = pickle.load(
-        #open('C:\\Users\\thakk\\Documents\\GitHub\\rajthakk-nabiyuni-bhsinha-a1\\part1\\successors9101112.p', "rb"))
-    #states13141516_lookup = pickle.load(
-        #open('C:\\Users\\thakk\\Documents\\GitHub\\rajthakk-nabiyuni-bhsinha-a1\\part1\\successors13141516.p', "rb"))
-
-    #state1234 = tuple([element if element in (1, 2, 3, 4) else 0 for element in state])
-    #state5678 = tuple([element if element in (5, 6, 7, 8) else 0 for element in state])
-    #state9101112 = tuple([element if element in (9, 10, 11, 12) else 0 for element in state])
-    #state13141516 = tuple([element if element in (13, 14, 15, 16) else 0 for element in state])
-
-    #d1234 = states1234_lookup[state1234]
-    #d45678 = states5678_lookup[state5678]
-    #d9101112 = states9101112_lookup[state9101112]
-    #d13141516 = states13141516_lookup[state13141516]
-
-    return False, False, False, False
-
-
-def predictor(state):
-    import numpy as np
-
-    row_positives, col_positives = count_positives(state)
-    row_negatives, col_negatives = count_negatives(state)
-
-    row_rowwise_range, col_rowwise_range = rowwise_range(state)
-    row_colwise_range, col_colwise_range = colwise_range(state)
-
-    row_range, col_change = row_col_range(state)
-
-    row_rowwise_max, col_rowwise_max = rowwise_max(state)
-    row_colwise_max, col_colwise_max = colwise_max(state)
-
-    row_min, col_min = min_row_col(state)
-    row_max, col_max = max_row_col(state)
-
-    row_rowise_unique, col_rowwise_unique = rowwise_unique(state)
-    row_colwise_unique, col_colwise_unique = colwise_unique(state)
-
-    row_unique, col_unique = row_col_unique(state)
-
-    row_sum, col_sum = summation(state)
-
-    row_abs_sum, col_abs_sum = abs_summation(state)
-
-    dot_product = dot_row_col(state)
-
-    d1234, d45678, d9101112, d13141516 = distance_calculator(state)
-
-    X = [1, row_positives, col_positives, row_negatives, col_negatives, row_rowwise_range, col_rowwise_range,
-         row_colwise_range, col_colwise_range, row_range, col_change, row_rowwise_max, col_rowwise_max,
-         row_colwise_max, col_colwise_max, row_min, col_min, row_max, col_max, row_rowise_unique, col_rowwise_unique,
-         row_colwise_unique, col_colwise_unique, row_unique, col_unique, row_sum, col_sum, row_abs_sum, col_abs_sum,
-         dot_product, d1234, d45678, d9101112, d13141516]
-
-    theta = [5.48491064e-02, -7.12614119e-03, -3.68746606e-04, 4.66991625e-02,
-             -9.73031963e-03, -1.52116506e-01, -1.00990662e-02, -5.67250132e-02,
-             0.00000000e+00, -1.41812533e-02, -2.52476656e-03, -4.91889192e-02,
-             -3.68746606e-04, -4.62175721e-02, 2.34039326e-03, 2.62686028e-03,
-             2.43257991e-03, -1.15543930e-02, -9.21866515e-05, 2.39984608e-01,
-             2.09297359e-01, 6.28569460e-02, 2.19396426e-01, 1.57142365e-02,
-             5.23243398e-02, 1.07477335e-01, 9.36157302e-03, 2.00875660e-01,
-             -1.00990662e-02, -3.33161735e-02, 3.00988781e-02, 1.27343899e-01,
-             -7.03165478e-02, -4.70063803e-02]
-
-    return round(np.dot(X, theta), 2)
-
-
-################################## Extra Functions for Heuristic - End ###################################
 
 ##########################Iman's COde###############################################
 
@@ -464,7 +287,8 @@ def astar_search(start_city, end_city, use_heurisitc):
             hs = 0
             if use_heurisitc: # defining h(s): heuristic function
                 # heuristic 1
-                hs = (heuristic1(succ_city)+heuristic2(succ_city))/2#heurisitc func
+                # hs = (0.5*heuristic1(succ_city)+0.5*heuristic2(succ_city))#heurisitc func
+                hs = my_heuristic(succ_city)
             heapq.heappush(fringe, (city_d + 1 + hs, succ_city))
 
     return [], {}
