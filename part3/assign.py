@@ -40,7 +40,8 @@
 #Answer: Firstly I tried the combination thing of generating all the possible states, such as groouping A with B, C,D,E,F
 #and then taking the group with lowest number and trying to minimize again with grouping it with ABC,ABD,ABE, ABF , but in case
 #of small data it works properly but with large number , the states generation was high and redundancy was there, so I modified
-#algorithm as above to optimize and return the result in minimum time possible.
+#algorithm as above to optimize and return the result in minimum time possible. The current solution is the optimal solution
+# The logic is mine and I discussed with Umang mehta to clarify it and make it more optimal.
 
 
 import os
@@ -64,7 +65,7 @@ file = open(input_file , 'r')
 input_list = []
 for line in file:
     input_list.append(line.split())
-print(input_list)
+#print(input_list)
 
 
 pref = {}
@@ -72,11 +73,9 @@ non_pref = {}
 group_size = {}
 
 for inputlist in range(0, len(input_list)):
-
     group_size[input_list[inputlist][0]] = int(input_list[inputlist][1])
 
 for inputlist in range(0, len(input_list)):
-
     if input_list[inputlist][2] == '_':
         pref[input_list[inputlist][0]] = []
 
@@ -95,16 +94,16 @@ for inputlist in range(0, len(input_list)):
         pref_mem_list = input_list[inputlist][3].split(",")
         non_pref[input_list[inputlist][0]] = pref_mem_list
 
-print()
-print()
-print(pref)
-print(non_pref)
-print(group_size)
+# print()
+# print()
+# print(pref)
+# print(non_pref)
+# print(group_size)
 
 members = list(pref.keys())
-print(members)
-initial_teams = [[member] for member in members]
-print(initial_teams)
+#print(members)
+initial_teams = [set([member]) for member in members]
+#print(initial_teams)
 
 def cost_function(team):
     cost = k
@@ -124,13 +123,43 @@ for initial_team in initial_teams:
     team_cost = cost_function(initial_team)
     q.put((-team_cost, initial_team))
 
-print(q.queue)
+#print(q.queue)
 total_cost = -sum([e[0] for e in q.queue])
-print(total_cost)
+#print(total_cost)
 
 new_cost = 0
 
 while(True):
     max_team = q.get()
-    team_len = len(max_team)
+    new_teams = Q.PriorityQueue()
+
+    for team in q.queue:
+        if len(team[1]) + len(max_team[1]) <= 3:
+            candidate = [member for member in team[1]]
+            candidate.extend(max_team[1])
+            candidate_cost = cost_function(candidate)
+            new_teams.put((candidate_cost, team))
+
+    if new_teams.empty():
+        q.put(max_team)
+        break
+
+    new_team_record = new_teams.get()
+    new_team = [member for member in new_team_record[1][1]]
+    new_team.extend(max_team[1])
+
+    #print(new_team_record[1])
+    new_total_cost = total_cost + new_team_record[1][0] + max_team[0] + new_team_record[0]
+    #print(new_total_cost)
+    if new_total_cost > total_cost:
+        q.put(max_team)
+        break
+    q.queue.remove(new_team_record[1])
+    q.put((-new_team_record[0], set(new_team)))
+    #print(q.queue)
+    total_cost = new_total_cost
+
+for cost, team in q.queue:
+    print(" ".join(team))
+print(total_cost)
 
